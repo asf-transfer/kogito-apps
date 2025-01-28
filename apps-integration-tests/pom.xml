@@ -35,6 +35,9 @@
   </properties>
 
   <modules>
+    <module>kogito-quarkus-integration-test-maven-devmode</module>
+    <module>kogito-quarkus-processes-integration-test-hot-reload</module>
+    <module>kogito-quarkus-serverless-workflow-integration-test</module>
     <module>integration-tests-data-index-service</module>
     <module>integration-tests-jobs-service</module>
     <module>integration-tests-trusty-service</module>
