@@ -18,12 +18,19 @@ on:
         required: true
 
 jobs:
+  shared-vars:
+    uses: ./.github/workflows/shared-vars.yml
+
   build_jitexecutor_native:
+    needs: shared-vars
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest, macos-13, windows-latest]
+        include:
+          - os: ${{ needs.shared-vars.outputs.os }}
+          - os: ${{ needs.shared-vars.outputs.macos }}
+          - os: ${{ needs.shared-vars.outputs.windows-os }}
 
     steps:
       - name: Set version
@@ -53,7 +60,7 @@ jobs:
       - name: "Set up Maven"
         uses: stCarolas/setup-maven@v5
         with:
-          maven-version: 3.9.6
+          maven-version: ${{ needs.shared-vars.outputs.maven-version }}
 
       - name: Import GPG key
         if: github.event_name != 'pull_request'
@@ -243,10 +250,10 @@ jobs:
           "@
           Add-Content "$env:WORKDIR_PATH\.m2\settings.xml" $contentToAdd
 
-      - name: "Set up JDK 17"
+      - name: "Set up JDK"
         uses: actions/setup-java@v4
         with:
-          java-version: "17"
+          java-version: ${{ needs.shared-vars.outputs.java-version }}
           distribution: "temurin"
           overwrite-settings: false
       
@@ -264,10 +271,10 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           brew install make && \
-          wget https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-17.0.9/graalvm-community-jdk-17.0.9_macos-x64_bin.tar.gz && \
-          tar -xzf graalvm-community-jdk-17.0.9_macos-x64_bin.tar.gz && \
-          sudo mv graalvm-community-openjdk-17.0.9+9.1 /Library/Java/JavaVirtualMachines/graalvm-community-openjdk-17.0.9+9.1
-          export GRAALVM_HOME=/Library/Java/JavaVirtualMachines/graalvm-community-openjdk-17.0.9+9.1/Contents/Home
+          wget ${{ needs.shared-vars.outputs.graalvm-jdk-macos-url }} && \
+          tar -xzf ${{ needs.shared-vars.outputs.graalvm-jdk-macos-bin }} && \
+          sudo mv ${{ needs.shared-vars.outputs.graalvm-jdk-macos-vm }} /Library/Java/JavaVirtualMachines/${{ needs.shared-vars.outputs.graalvm-jdk-macos-vm }}
+          export GRAALVM_HOME=/Library/Java/JavaVirtualMachines/${{ needs.shared-vars.outputs.graalvm-jdk-macos-vm }}/Contents/Home
           export PATH=${GRAALVM_HOME}/bin:$PATH
           echo "${GRAALVM_HOME}/bin" >> $GITHUB_PATH && \
           echo "GRAALVM_HOME=${GRAALVM_HOME}" >> $GITHUB_ENV && \
